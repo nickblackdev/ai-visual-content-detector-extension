@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Visual Content Detector</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><img src="icons/ai-icon.png" alt="AI" class="title-icon"> AI Visual Detector</h1>
+            <p class="subtitle">Analyzing images and videos...</p>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Analyzing visual content...</p>
+        </div>
+        
+        <div class="results" id="results" style="display: none;">
+            <div class="result-card">
+                <div class="result-header">
+                    <h2>Visual Analysis Results</h2>
+                    <div class="confidence-badge" id="confidence-badge">
+                        <span id="confidence-score">0%</span>
+                    </div>
+                </div>
+                
+                <div class="media-summary" id="media-summary">
+                    <div class="media-count">
+                        <span id="media-count">0</span> media elements found
+                    </div>
+                </div>
+                
+                <div class="ai-probability">
+                    <div class="probability-bar">
+                        <div class="probability-fill" id="probability-fill"></div>
+                    </div>
+                    <div class="probability-labels">
+                        <span>Human</span>
+                        <span>AI Generated</span>
+                    </div>
+                </div>
+                
+                <div class="indicators">
+                    <h3 class="collapsible-header" id="indicators-header">
+                        <span class="collapse-icon collapsed">◀</span>
+                        Overall Detection Indicators
+                    </h3>
+                    <div class="indicator-list collapsed" id="indicator-list">
+                        <!-- Indicators will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="media-details" id="media-details">
+                    <h3>Individual Media Analysis</h3>
+                    <div class="media-list" id="media-list">
+                        <!-- Individual media analysis will be shown here -->
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button id="analyze-btn" class="btn primary">Re-analyze</button>
+                </div>
+                
+                <div class="support-section">
+                    <p class="support-text">Enjoying this tool? Consider supporting the developer!</p>
+                    <button id="buy-coffee-btn" class="btn coffee-btn">
+                        <span class="coffee-icon">☕</span>
+                        Buy me a coffee
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="error" id="error" style="display: none;">
+            <div class="error-icon">⚠️</div>
+            <p id="error-message">No images or videos found on this page</p>
+            <button id="retry-btn" class="btn primary">Retry</button>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html> 

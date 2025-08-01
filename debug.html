@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Visual Detector Debug Tool</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .debug-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        
+        .debug-info {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #667eea;
+        }
+        
+        .media-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin: 10px 0;
+            background: white;
+        }
+        
+        .media-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .media-details {
+            flex: 1;
+        }
+        
+        .media-src {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            word-break: break-all;
+        }
+        
+        .analysis-results {
+            margin-top: 20px;
+        }
+        
+        .indicator {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .score {
+            font-weight: bold;
+        }
+        
+        .score.high { color: #dc3545; }
+        .score.medium { color: #ffc107; }
+        .score.low { color: #28a745; }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 AI Visual Detector Debug Tool</h1>
+    
+    <div class="debug-section">
+        <h2>Instructions</h2>
+        <p>This debug tool helps you understand what the AI Visual Detector extension is finding on web pages.</p>
+        <ol>
+            <li>Install the AI Visual Detector Chrome extension</li>
+            <li>Navigate to a page with AI-generated images</li>
+            <li>Click the extension icon to analyze the page</li>
+            <li>Come back to this page and click "Show Debug Info" below</li>
+        </ol>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Debug Controls</h2>
+        <button class="btn" onclick="showDebugInfo()">Show Debug Info</button>
+        <button class="btn" onclick="clearDebugInfo()">Clear Debug Info</button>
+        <button class="btn" onclick="testDetection()">Test Detection</button>
+    </div>
+    
+    <div id="debug-output" class="debug-section" style="display: none;">
+        <h2>Debug Information</h2>
+        <div id="debug-content"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h2>Common AI Generation Characteristics</h2>
+        <div class="debug-info">
+            <h3>Image Dimensions</h3>
+            <ul>
+                <li><strong>Perfect Squares:</strong> 512x512, 1024x1024, 1536x1536, 2048x2048</li>
+                <li><strong>Power-of-2:</strong> 512, 1024, 1536, 2048 (common in AI generation)</li>
+                <li><strong>Standard Ratios:</strong> 1:1, 16:9, 4:3, 3:2</li>
+            </ul>
+        </div>
+        
+        <div class="debug-info">
+            <h3>URL Patterns</h3>
+            <ul>
+                <li><strong>AI Platforms:</strong> openai.com, midjourney.com, stability.ai</li>
+                <li><strong>File Patterns:</strong> dalle, midjourney, stable, generated</li>
+                <li><strong>Parameters:</strong> random=, sample, ai-generated</li>
+            </ul>
+        </div>
+        
+        <div class="debug-info">
+            <h3>Visual Characteristics</h3>
+            <ul>
+                <li><strong>Perfect Symmetry:</strong> Unnaturally perfect geometric patterns</li>
+                <li><strong>Color Consistency:</strong> Overly uniform color palettes</li>
+                <li><strong>Sharp Edges:</strong> Unusually clean, crisp edges</li>
+                <li><strong>High Resolution:</strong> Very high-res with perfect dimensions</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function showDebugInfo() {
+            const debugOutput = document.getElementById('debug-output');
+            const debugContent = document.getElementById('debug-content');
+            
+            // Get information about images on the page
+            const images = Array.from(document.querySelectorAll('img'));
+            const videos = Array.from(document.querySelectorAll('video'));
+            
+            let html = '<h3>Detected Media Elements</h3>';
+            
+            if (images.length === 0 && videos.length === 0) {
+                html += '<p>No images or videos found on this page.</p>';
+            } else {
+                html += `<p>Found ${images.length} images and ${videos.length} videos.</p>`;
+                
+                // Show image details
+                images.forEach((img, index) => {
+                    const rect = img.getBoundingClientRect();
+                    const isLargeEnough = rect.width >= 100 && rect.height >= 100;
+                    
+                    html += `
+                        <div class="media-item">
+                            <img src="${img.src}" class="media-preview" alt="Preview">
+                            <div class="media-details">
+                                <div><strong>Image ${index + 1}</strong></div>
+                                <div>Size: ${img.naturalWidth || 'Unknown'} x ${img.naturalHeight || 'Unknown'}</div>
+                                <div>Display Size: ${Math.round(rect.width)} x ${Math.round(rect.height)}</div>
+                                <div>Large Enough: ${isLargeEnough ? '✅ Yes' : '❌ No'}</div>
+                                <div class="media-src">${img.src}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                // Show video details
+                videos.forEach((video, index) => {
+                    html += `
+                        <div class="media-item">
+                            <div class="media-preview" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">
+                                🎥 Video
+                            </div>
+                            <div class="media-details">
+                                <div><strong>Video ${index + 1}</strong></div>
+                                <div>Size: ${video.videoWidth || 'Unknown'} x ${video.videoHeight || 'Unknown'}</div>
+                                <div class="media-src">${video.src || 'No direct src'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            debugContent.innerHTML = html;
+            debugOutput.style.display = 'block';
+        }
+        
+        function clearDebugInfo() {
+            document.getElementById('debug-output').style.display = 'none';
+        }
+        
+        function testDetection() {
+            // Simulate what the extension would detect
+            const images = Array.from(document.querySelectorAll('img')).filter(img => {
+                const rect = img.getBoundingClientRect();
+                return rect.width >= 100 && rect.height >= 100 && img.src;
+            });
+            
+            let html = '<h3>Simulated Analysis Results</h3>';
+            
+            if (images.length === 0) {
+                html += '<p>No images large enough for analysis found.</p>';
+            } else {
+                images.forEach((img, index) => {
+                    const width = img.naturalWidth;
+                    const height = img.naturalHeight;
+                    const src = img.src;
+                    
+                    // Simulate analysis
+                    const isPerfectSquare = width === height;
+                    const isPowerOfTwo = width > 0 && (width & (width - 1)) === 0;
+                    const hasAIPatterns = /(dalle|midjourney|stable|generated|ai)/i.test(src);
+                    const isCommonAISize = [512, 768, 1024, 1536, 2048].includes(width);
+                    
+                    let aiScore = 0;
+                    if (isPerfectSquare) aiScore += 0.3;
+                    if (isPowerOfTwo) aiScore += 0.2;
+                    if (hasAIPatterns) aiScore += 0.4;
+                    if (isCommonAISize) aiScore += 0.3;
+                    
+                    const scoreClass = aiScore > 0.6 ? 'high' : aiScore > 0.3 ? 'medium' : 'low';
+                    
+                    html += `
+                        <div class="media-item">
+                            <img src="${img.src}" class="media-preview" alt="Preview">
+                            <div class="media-details">
+                                <div><strong>Image ${index + 1}</strong></div>
+                                <div>Size: ${width} x ${height}</div>
+                                <div class="analysis-results">
+                                    <div class="indicator">
+                                        <span>Perfect Square:</span>
+                                        <span class="score ${isPerfectSquare ? 'high' : 'low'}">${isPerfectSquare ? 'Yes' : 'No'}</span>
+                                    </div>
+                                    <div class="indicator">
+                                        <span>Power of 2:</span>
+                                        <span class="score ${isPowerOfTwo ? 'high' : 'low'}">${isPowerOfTwo ? 'Yes' : 'No'}</span>
+                                    </div>
+                                    <div class="indicator">
+                                        <span>AI Patterns in URL:</span>
+                                        <span class="score ${hasAIPatterns ? 'high' : 'low'}">${hasAIPatterns ? 'Yes' : 'No'}</span>
+                                    </div>
+                                    <div class="indicator">
+                                        <span>Common AI Size:</span>
+                                        <span class="score ${isCommonAISize ? 'high' : 'low'}">${isCommonAISize ? 'Yes' : 'No'}</span>
+                                    </div>
+                                    <div class="indicator">
+                                        <span><strong>AI Score:</strong></span>
+                                        <span class="score ${scoreClass}">${Math.round(aiScore * 100)}%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            
+            document.getElementById('debug-content').innerHTML = html;
+            document.getElementById('debug-output').style.display = 'block';
+        }
+    </script>
+</body>
+</html> 

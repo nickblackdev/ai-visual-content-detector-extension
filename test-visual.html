@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Visual Content Detector Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .ai-content {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .human-content {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .instructions {
+            background: #e2e3e5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .image-item {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .image-item img,
+        .image-item video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .image-caption {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .placeholder-image {
+            width: 200px;
+            height: 150px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 12px;
+            text-align: center;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Visual Content Detector Test Page</h1>
+    
+    <div class="instructions">
+        <h3>How to Test Visual AI Detection:</h3>
+        <ol>
+            <li>Install the AI Visual Detector Chrome extension</li>
+            <li>Click the extension icon in your browser toolbar</li>
+            <li>View the analysis results for images and videos below</li>
+            <li>The AI-generated images should score higher due to their characteristics</li>
+        </ol>
+    </div>
+    
+    <div class="test-section ai-content">
+        <h2>Sample AI-Generated Images</h2>
+        <p>These images simulate AI-generated content with characteristics like perfect squares, common AI dimensions, and sample URLs:</p>
+        <ul>
+            <li>Perfect square dimensions (512x512, 1024x1024)</li>
+            <li>Power-of-2 dimensions common in AI generation</li>
+            <li>Sample URLs that trigger metadata analysis</li>
+            <li>Standard AI generation aspect ratios</li>
+        </ul>
+        
+        <div class="image-grid">
+            <div class="image-item">
+                <img src="https://picsum.photos/512/512?random=ai1" alt="AI Generated Image 1" width="512" height="512">
+                <div class="image-caption">DALL-E generated landscape (512x512)</div>
+            </div>
+            <div class="image-item">
+                <img src="https://picsum.photos/1024/1024?random=ai2" alt="AI Generated Image 2" width="1024" height="1024">
+                <div class="image-caption">Midjourney portrait (1024x1024)</div>
+            </div>
+            <div class="image-item">
+                <img src="https://picsum.photos/768/768?random=ai3" alt="AI Generated Image 3" width="768" height="768">
+                <div class="image-caption">Stable Diffusion art (768x768)</div>
+            </div>
+            <div class="image-item">
+                <img src="https://picsum.photos/1536/1536?random=ai4" alt="AI Generated Image 4" width="1536" height="1536">
+                <div class="image-caption">High-res AI generation (1536x1536)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section human-content">
+        <h2>Sample Human-Captured Images</h2>
+        <p>These images simulate human-captured content with characteristics like non-standard dimensions and natural aspect ratios:</p>
+        <ul>
+            <li>Non-standard dimensions (4032x3024, 1920x1080)</li>
+            <li>Natural aspect ratios (4:3, 16:9)</li>
+            <li>Real-world camera dimensions</li>
+            <li>Varied aspect ratios typical of human photography</li>
+        </ul>
+        
+        <div class="image-grid">
+            <div class="image-item">
+                <img src="https://picsum.photos/4032/3024?random=human1" alt="Human Photo 1" width="4032" height="3024">
+                <div class="image-caption">iPhone photo of sunset (4032x3024)</div>
+            </div>
+            <div class="image-item">
+                <img src="https://picsum.photos/1920/1080?random=human2" alt="Human Photo 2" width="1920" height="1080">
+                <div class="image-caption">DSLR landscape shot (1920x1080)</div>
+            </div>
+            <div class="image-item">
+                <img src="https://picsum.photos/3024/4032?random=human3" alt="Human Photo 3" width="3024" height="4032">
+                <div class="image-caption">Smartphone portrait (3024x4032)</div>
+            </div>
+            <div class="image-item">
+                <img src="https://picsum.photos/2048/1536?random=human4" alt="Human Photo 4" width="2048" height="1536">
+                <div class="image-caption">Camera photo (2048x1536)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section ai-content">
+        <h2>Sample AI-Generated Videos</h2>
+        <p>These videos simulate AI-generated content with standard dimensions:</p>
+        
+        <div class="image-grid">
+            <div class="image-item">
+                <video width="1024" height="1024" controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="image-caption">AI-generated animation (1024x1024)</div>
+            </div>
+            <div class="image-item">
+                <video width="512" height="512" controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="image-caption">Synthetic video content (512x512)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-section human-content">
+        <h2>Sample Human-Recorded Videos</h2>
+        <p>These videos simulate human-recorded content with natural dimensions:</p>
+        
+        <div class="image-grid">
+            <div class="image-item">
+                <video width="1920" height="1080" controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="image-caption">Phone camera recording (1920x1080)</div>
+            </div>
+            <div class="image-item">
+                <video width="3840" height="2160" controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <div class="image-caption">4K camera footage (3840x2160)</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h3>Expected Detection Results:</h3>
+        <ul>
+            <li><strong>AI-Generated Content:</strong> Should show higher AI probability scores due to:
+                <ul>
+                    <li>Perfect square dimensions (512x512, 1024x1024, 1536x1536)</li>
+                    <li>Power-of-2 dimensions (512, 1024, 1536)</li>
+                    <li>Sample URLs with "random" parameters</li>
+                    <li>Standard AI generation aspect ratios</li>
+                </ul>
+            </li>
+            <li><strong>Human-Captured Content:</strong> Should show lower AI probability scores due to:
+                <ul>
+                    <li>Non-standard dimensions (4032x3024, 3024x4032)</li>
+                    <li>Natural aspect ratios (4:3, 16:9)</li>
+                    <li>Real-world camera dimensions</li>
+                    <li>Varied aspect ratios</li>
+                </ul>
+            </li>
+        </ul>
+    </div>
+    
+    <div class="instructions">
+        <h3>Detection Algorithm Features:</h3>
+        <ul>
+            <li><strong>Perfect Symmetry:</strong> Detects perfect squares and power-of-2 dimensions</li>
+            <li><strong>Unusual Patterns:</strong> Identifies common AI generation dimensions and aspect ratios</li>
+            <li><strong>Color Consistency:</strong> Analyzes image characteristics for AI patterns</li>
+            <li><strong>Texture Analysis:</strong> Checks for high-resolution and perfect square dimensions</li>
+            <li><strong>Edge Detection:</strong> Identifies common AI generation sizes</li>
+            <li><strong>Metadata Analysis:</strong> Checks URLs for AI generation indicators</li>
+            <li><strong>File Characteristics:</strong> Analyzes dimensions and aspect ratios</li>
+        </ul>
+    </div>
+</body>
+</html> 

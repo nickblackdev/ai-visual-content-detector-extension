@@ -1,6 +1,6 @@
 // Check if already injected to prevent duplicate class declaration
 if (window.AIVisualDetectorInjected) {
-    console.log('AIVisualDetector already injected, skipping...');
+    // AIVisualDetector already injected, skipping...
 } else {
     window.AIVisualDetectorInjected = true;
     
@@ -98,17 +98,7 @@ if (window.AIVisualDetectorInjected) {
                 src = new URL(src, window.location.href).href;
             }
             
-            console.log('Media element:', {
-                tagName: element.tagName,
-                src: element.src,
-                fullSrc: src,
-                width: width,
-                height: height,
-                currentSrc: element.currentSrc || element.src,
-                dataset: element.dataset,
-                id: element.id,
-                className: element.className
-            });
+
             
             // Try to capture the current image data to prevent dynamic content issues
             let imageDataUrl = null;
@@ -122,7 +112,7 @@ if (window.AIVisualDetectorInjected) {
                     imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 }
             } catch (error) {
-                console.log('Could not capture image data:', error);
+                // Could not capture image data
             }
             
             return {
@@ -871,16 +861,11 @@ if (window.AIVisualDetectorInjected) {
 
 // Message listener for popup communication
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    console.log('Message received:', request);
-    
     if (request.action === 'analyzeContent') {
-        console.log('Starting analysis...');
         const detector = new AIVisualDetector();
         detector.analyzePage().then(result => {
-            console.log('Analysis complete:', result);
             sendResponse(result);
         }).catch(error => {
-            console.error('Analysis failed:', error);
             sendResponse({
                 success: false,
                 error: error.message,
@@ -899,12 +884,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 // Initialize detector when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('AI Visual Content Detector loaded');
+    // AI Visual Content Detector loaded
 });
 
 // Also initialize on window load for pages that load content dynamically
 window.addEventListener('load', () => {
-    console.log('AI Visual Content Detector - window loaded');
+    // AI Visual Content Detector - window loaded
 });
 
 } // Close the if statement that prevents duplicate injection

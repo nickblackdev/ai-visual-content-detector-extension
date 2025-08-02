@@ -1,5 +1,11 @@
-// AI Visual Content Detection Algorithm
-class AIVisualDetector {
+// Check if already injected to prevent duplicate class declaration
+if (window.AIVisualDetectorInjected) {
+    console.log('AIVisualDetector already injected, skipping...');
+} else {
+    window.AIVisualDetectorInjected = true;
+    
+    // AI Visual Content Detection Algorithm
+    class AIVisualDetector {
     constructor() {
         this.indicators = {};
         this.confidence = 0;
@@ -72,15 +78,65 @@ class AIVisualDetector {
     getDetailedMediaInfo(mediaElements) {
         return mediaElements.map(element => {
             const analysis = this.getIndividualAnalysis(element);
-            return {
+            const width = element.naturalWidth || element.videoWidth;
+            const height = element.naturalHeight || element.videoHeight;
+            const size = width && height ? `${width}x${height}` : 'Unknown';
+            
+            // Get the full URL to ensure we have the correct source
+            let src = element.src;
+            
+            // For videos, check if there's a source tag
+            if (element.tagName.toLowerCase() === 'video' && !src) {
+                const sourceElement = element.querySelector('source');
+                if (sourceElement && sourceElement.src) {
+                    src = sourceElement.src;
+                }
+            }
+            
+            if (src && !src.startsWith('http')) {
+                // Convert relative URLs to absolute URLs
+                src = new URL(src, window.location.href).href;
+            }
+            
+            console.log('Media element:', {
+                tagName: element.tagName,
                 src: element.src,
+                fullSrc: src,
+                width: width,
+                height: height,
+                currentSrc: element.currentSrc || element.src,
+                dataset: element.dataset,
+                id: element.id,
+                className: element.className
+            });
+            
+            // Try to capture the current image data to prevent dynamic content issues
+            let imageDataUrl = null;
+            try {
+                if (element.tagName.toLowerCase() === 'img' && element.complete && element.naturalWidth > 0) {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = element.naturalWidth;
+                    canvas.height = element.naturalHeight;
+                    ctx.drawImage(element, 0, 0);
+                    imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                }
+            } catch (error) {
+                console.log('Could not capture image data:', error);
+            }
+            
+            return {
+                src: src,
+                originalSrc: element.src, // Keep the original source for comparison
+                imageDataUrl: imageDataUrl, // Captured image data to prevent dynamic content issues
                 type: element.tagName.toLowerCase(),
-                size: element.naturalWidth ? `${element.naturalWidth}x${element.naturalHeight}` : 'Unknown',
+                size: size,
                 aiScore: analysis.aiScore,
                 indicators: analysis.indicators,
                 aiProbability: analysis.aiScore,
                 isAI: analysis.aiScore > 0.6,
-                confidence: analysis.confidence
+                confidence: analysis.confidence,
+                analyzedAt: new Date().toISOString() // Timestamp when analysis was done
             };
         });
     }
@@ -113,7 +169,10 @@ class AIVisualDetector {
         let confidence = 0.5; // Base confidence
         
         // Higher confidence for elements with valid dimensions
-        if (element.naturalWidth && element.naturalHeight) {
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
+        if (width && height) {
             confidence += 0.2;
         }
         
@@ -186,6 +245,14 @@ class AIVisualDetector {
             'AI Artifacts': this.analyzeAIArtifacts(element)
         };
         
+        // Add video-specific analysis for video elements
+        if (element.tagName.toLowerCase() === 'video') {
+            analysis.indicators['Video Characteristics'] = this.analyzeVideoCharacteristics(element);
+        }
+        
+        // Add processed image analysis for all elements
+        analysis.indicators['Processed Image Analysis'] = this.analyzeProcessedImages(element);
+        
         // Calculate AI score for this element
         analysis.aiScore = this.calculateElementScore(analysis.indicators);
         
@@ -196,8 +263,12 @@ class AIVisualDetector {
     analyzeSymmetry(element) {
         let symmetryScore = 0;
         
-        if (element.naturalWidth && element.naturalHeight) {
-            const aspectRatio = element.naturalWidth / element.naturalHeight;
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
+        if (width && height) {
+            const aspectRatio = width / height;
             
             // Perfect squares are common in AI generation
             if (Math.abs(aspectRatio - 1) < 0.01) {
@@ -205,12 +276,12 @@ class AIVisualDetector {
             }
             
             // Check for power-of-2 dimensions (common in AI generation)
-            if (this.isPowerOfTwo(element.naturalWidth) && this.isPowerOfTwo(element.naturalHeight)) {
+            if (this.isPowerOfTwo(width) && this.isPowerOfTwo(height)) {
                 symmetryScore += 0.3;
             }
             
             // Very high resolution perfect squares
-            if (element.naturalWidth >= 2048 && element.naturalHeight >= 2048 && aspectRatio === 1) {
+            if (width >= 2048 && height >= 2048 && aspectRatio === 1) {
                 symmetryScore += 0.5;
             }
         }
@@ -227,8 +298,12 @@ class AIVisualDetector {
     analyzePatterns(element) {
         let patternScore = 0;
         
-        if (element.naturalWidth && element.naturalHeight) {
-            const aspectRatio = element.naturalWidth / element.naturalHeight;
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
+        if (width && height) {
+            const aspectRatio = width / height;
             
             // AI often generates images with common aspect ratios
             const commonAIAspectRatios = [1, 16/9, 4/3, 3/2, 5/4];
@@ -245,18 +320,18 @@ class AIVisualDetector {
                 [2048, 2048], [1024, 1024], [512, 512]
             ];
             
-            commonAISizes.forEach(([width, height]) => {
-                if (element.naturalWidth === width && element.naturalHeight === height) {
+            commonAISizes.forEach(([checkWidth, checkHeight]) => {
+                if (width === checkWidth && height === checkHeight) {
                     patternScore += 0.3;
                 }
             });
             
             // Check for very specific AI generation patterns
-            if (element.naturalWidth === 1024 && element.naturalHeight === 1024) {
+            if (width === 1024 && height === 1024) {
                 patternScore += 0.4; // Very common in AI generation
             }
             
-            if (element.naturalWidth === 512 && element.naturalHeight === 512) {
+            if (width === 512 && height === 512) {
                 patternScore += 0.3; // Common in older AI models
             }
         }
@@ -268,24 +343,28 @@ class AIVisualDetector {
     analyzeColorConsistency(element) {
         let colorScore = 0;
         
-        if (element.naturalWidth && element.naturalHeight) {
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
+        if (width && height) {
             // Larger images with perfect dimensions often indicate AI generation
-            if (element.naturalWidth >= 1024 && element.naturalHeight >= 1024) {
+            if (width >= 1024 && height >= 1024) {
                 colorScore += 0.3;
             }
             
             // Check for common AI generation dimensions
-            if (element.naturalWidth === 512 && element.naturalHeight === 512) {
+            if (width === 512 && height === 512) {
                 colorScore += 0.4;
             }
             
             // Very high resolution images
-            if (element.naturalWidth >= 2048 || element.naturalHeight >= 2048) {
+            if (width >= 2048 || height >= 2048) {
                 colorScore += 0.3;
             }
             
             // Perfect squares with high resolution
-            if (element.naturalWidth === element.naturalHeight && element.naturalWidth >= 1024) {
+            if (width === height && width >= 1024) {
                 colorScore += 0.4;
             }
         }
@@ -297,24 +376,28 @@ class AIVisualDetector {
     analyzeTexture(element) {
         let textureScore = 0;
         
-        if (element.naturalWidth && element.naturalHeight) {
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
+        if (width && height) {
             // Check for very high resolution images (common in AI generation)
-            if (element.naturalWidth >= 2048 || element.naturalHeight >= 2048) {
+            if (width >= 2048 || height >= 2048) {
                 textureScore += 0.3;
             }
             
             // Check for perfect square dimensions
-            if (element.naturalWidth === element.naturalHeight) {
+            if (width === height) {
                 textureScore += 0.2;
             }
             
             // Power-of-2 dimensions
-            if (this.isPowerOfTwo(element.naturalWidth) && this.isPowerOfTwo(element.naturalHeight)) {
+            if (this.isPowerOfTwo(width) && this.isPowerOfTwo(height)) {
                 textureScore += 0.3;
             }
             
             // Very specific AI generation sizes
-            if (element.naturalWidth === 1536 && element.naturalHeight === 1536) {
+            if (width === 1536 && height === 1536) {
                 textureScore += 0.4;
             }
         }
@@ -326,25 +409,29 @@ class AIVisualDetector {
     analyzeEdges(element) {
         let edgeScore = 0;
         
-        if (element.naturalWidth && element.naturalHeight) {
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
+        if (width && height) {
             // Check for common AI generation dimensions
             const commonAISizes = [512, 768, 1024, 1536, 2048];
-            if (commonAISizes.includes(element.naturalWidth) && commonAISizes.includes(element.naturalHeight)) {
+            if (commonAISizes.includes(width) && commonAISizes.includes(height)) {
                 edgeScore += 0.4;
             }
             
             // Perfect squares are very common in AI generation
-            if (element.naturalWidth === element.naturalHeight) {
+            if (width === height) {
                 edgeScore += 0.3;
             }
             
             // Very high resolution
-            if (element.naturalWidth >= 2048 || element.naturalHeight >= 2048) {
+            if (width >= 2048 || height >= 2048) {
                 edgeScore += 0.3;
             }
             
             // Power-of-2 dimensions
-            if (this.isPowerOfTwo(element.naturalWidth) && this.isPowerOfTwo(element.naturalHeight)) {
+            if (this.isPowerOfTwo(width) && this.isPowerOfTwo(height)) {
                 edgeScore += 0.2;
             }
         }
@@ -356,36 +443,229 @@ class AIVisualDetector {
     analyzeAIArtifacts(element) {
         let artifactScore = 0;
         
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
         // Check for common AI generation characteristics
-        if (element.naturalWidth && element.naturalHeight) {
+        if (width && height) {
             // Very high resolution with perfect dimensions
-            if (element.naturalWidth >= 2048 && element.naturalHeight >= 2048) {
+            if (width >= 2048 && height >= 2048) {
                 artifactScore += 0.4;
             }
             
             // Perfect squares with power-of-2 dimensions
-            if (this.isPowerOfTwo(element.naturalWidth) && this.isPowerOfTwo(element.naturalHeight) && 
-                element.naturalWidth === element.naturalHeight) {
+            if (this.isPowerOfTwo(width) && this.isPowerOfTwo(height) && 
+                width === height) {
                 artifactScore += 0.5;
             }
             
             // Common AI generation sizes
             const aiSizes = [512, 768, 1024, 1536, 2048];
-            if (aiSizes.includes(element.naturalWidth) && aiSizes.includes(element.naturalHeight)) {
+            if (aiSizes.includes(width) && aiSizes.includes(height)) {
                 artifactScore += 0.4;
             }
             
             // Very specific patterns
-            if (element.naturalWidth === 1024 && element.naturalHeight === 1024) {
+            if (width === 1024 && height === 1024) {
                 artifactScore += 0.5; // Most common AI generation size
             }
             
-            if (element.naturalWidth === 512 && element.naturalHeight === 512) {
+            if (width === 512 && height === 512) {
                 artifactScore += 0.4; // Common in older models
             }
+            
+            // Check for processed/resaved AI images
+            // These often have specific characteristics even after processing
+            if (width >= 1024 && height >= 1024) {
+                // High resolution images are often AI-generated
+                artifactScore += 0.3;
+            }
+            
+            // Check for common processed AI image dimensions
+            const processedAISizes = [800, 1200, 1600, 1920, 2560];
+            if (processedAISizes.includes(width) || processedAISizes.includes(height)) {
+                artifactScore += 0.3;
+            }
+            
+            // Check for aspect ratios common in processed AI images
+            const aspectRatio = width / height;
+            const commonProcessedRatios = [1, 4/3, 3/4, 16/9, 9/16, 3/2, 2/3];
+            commonProcessedRatios.forEach(ratio => {
+                if (Math.abs(aspectRatio - ratio) < 0.01) {
+                    artifactScore += 0.2;
+                }
+            });
         }
         
         return Math.min(artifactScore, 1);
+    }
+    
+    // Analyze video-specific characteristics
+    analyzeVideoCharacteristics(element) {
+        let videoScore = 0;
+        
+        // Handle video dimensions
+        const width = element.videoWidth;
+        const height = element.videoHeight;
+        
+        if (width && height) {
+            // Common AI video generation dimensions
+            const commonAIVideoSizes = [
+                [1920, 1080], [1080, 1920], [1024, 1024], [512, 512],
+                [768, 768], [1536, 1536], [2048, 2048], [1280, 720],
+                [720, 1280], [2560, 1440], [1440, 2560]
+            ];
+            
+            commonAIVideoSizes.forEach(([checkWidth, checkHeight]) => {
+                if (width === checkWidth && height === checkHeight) {
+                    videoScore += 0.4;
+                }
+            });
+            
+            // Perfect squares are very common in AI video generation
+            if (width === height) {
+                videoScore += 0.3;
+            }
+            
+            // Power-of-2 dimensions
+            if (this.isPowerOfTwo(width) && this.isPowerOfTwo(height)) {
+                videoScore += 0.3;
+            }
+            
+            // Very high resolution videos
+            if (width >= 2048 || height >= 2048) {
+                videoScore += 0.4;
+            }
+            
+            // Common AI video aspect ratios
+            const aspectRatio = width / height;
+            const commonAIAspectRatios = [1, 16/9, 9/16, 4/3, 3/4];
+            commonAIAspectRatios.forEach(ratio => {
+                if (Math.abs(aspectRatio - ratio) < 0.01) {
+                    videoScore += 0.2;
+                }
+            });
+            
+            // Very specific AI video patterns
+            if (width === 1920 && height === 1080) {
+                videoScore += 0.5; // Most common AI video size
+            }
+            
+            if (width === 1024 && height === 1024) {
+                videoScore += 0.4; // Common in AI video generation
+            }
+        }
+        
+        // Check for video duration (AI videos often have specific durations)
+        if (element.duration) {
+            // AI videos often have round durations (10s, 15s, 30s, etc.)
+            const duration = element.duration;
+            if (duration % 5 === 0 && duration <= 60) {
+                videoScore += 0.2;
+            }
+            
+            // Very short videos (common in AI generation)
+            if (duration <= 15) {
+                videoScore += 0.3;
+            }
+        }
+        
+        // Check for video source patterns
+        const src = element.src || '';
+        const aiVideoPlatforms = [
+            'runway', 'pika', 'sora', 'gen-2', 'stable-video',
+            'ai-video', 'generated-video', 'synthetic-video'
+        ];
+        
+        aiVideoPlatforms.forEach(platform => {
+            if (src.toLowerCase().includes(platform)) {
+                videoScore += 0.5;
+            }
+        });
+        
+        return Math.min(videoScore, 1);
+    }
+    
+    // Analyze processed/resaved AI images
+    analyzeProcessedImages(element) {
+        let processedScore = 0;
+        
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
+        if (width && height) {
+            // Check for characteristics of processed AI images
+            
+            // High resolution images (common in AI generation)
+            if (width >= 1024 || height >= 1024) {
+                processedScore += 0.3;
+            }
+            
+            // Common processed dimensions
+            const processedSizes = [800, 1200, 1600, 1920, 2560];
+            if (processedSizes.includes(width) || processedSizes.includes(height)) {
+                processedScore += 0.4;
+            }
+            
+            // Check aspect ratios common in processed AI images
+            const aspectRatio = width / height;
+            const processedRatios = [1, 4/3, 3/4, 16/9, 9/16, 3/2, 2/3];
+            processedRatios.forEach(ratio => {
+                if (Math.abs(aspectRatio - ratio) < 0.01) {
+                    processedScore += 0.2;
+                }
+            });
+            
+            // Check for dimensions that suggest AI origin even after processing
+            if (width >= 800 && height >= 800) {
+                processedScore += 0.3;
+            }
+            
+            // Check for common processed image patterns
+            if (width % 8 === 0 && height % 8 === 0) {
+                processedScore += 0.2; // Common in processed images
+            }
+            
+            // Check for dimensions that are multiples of common AI sizes
+            const aiMultiples = [256, 512, 1024];
+            aiMultiples.forEach(multiple => {
+                if (width % multiple === 0 || height % multiple === 0) {
+                    processedScore += 0.3;
+                }
+            });
+        }
+        
+        // Check file characteristics that suggest processing
+        const src = element.src || '';
+        
+        // Check for processing indicators in URLs
+        const processingIndicators = [
+            'processed', 'enhanced', 'upscaled', 'improved',
+            'edited', 'modified', 'converted', 'resized',
+            'compressed', 'optimized', 'cleaned', 'filtered'
+        ];
+        
+        processingIndicators.forEach(indicator => {
+            if (src.toLowerCase().includes(indicator)) {
+                processedScore += 0.4;
+            }
+        });
+        
+        // Check for common processed image domains
+        const processedDomains = [
+            'imgur.com', 'postimages.org', 'imgbb.com',
+            'tinypic.com', 'photobucket.com', 'flickr.com'
+        ];
+        
+        processedDomains.forEach(domain => {
+            if (src.toLowerCase().includes(domain)) {
+                processedScore += 0.2;
+            }
+        });
+        
+        return Math.min(processedScore, 1);
     }
     
     // Analyze image metadata for AI generation clues
@@ -399,7 +679,8 @@ class AIVisualDetector {
         const aiPlatforms = [
             'midjourney', 'dall-e', 'stable-diffusion', 'generated',
             'ai-generated', 'synthetic', 'artificial', 'picsum', 'sample',
-            'openai', 'anthropic', 'runway', 'pika', 'sora'
+            'openai', 'anthropic', 'runway', 'pika', 'sora',
+            'gen-2', 'stable-video', 'ai-video', 'generated-video', 'synthetic-video'
         ];
         
         aiPlatforms.forEach(platform => {
@@ -429,7 +710,8 @@ class AIVisualDetector {
         // Check for common AI generation domains
         const aiDomains = [
             'openai.com', 'anthropic.com', 'midjourney.com', 'stability.ai',
-            'runwayml.com', 'pika.art', 'sora.openai.com'
+            'runwayml.com', 'pika.art', 'sora.openai.com',
+            'runway.com', 'pika.art', 'stability.ai'
         ];
         
         aiDomains.forEach(domain => {
@@ -447,6 +729,27 @@ class AIVisualDetector {
             metadataScore += 0.3;
         }
         
+        // Check for processed AI image indicators
+        const processedAIIndicators = [
+            'upscaled', 'enhanced', 'improved', 'processed',
+            'edited', 'modified', 'converted', 'resized',
+            'compressed', 'optimized', 'cleaned'
+        ];
+        
+        processedAIIndicators.forEach(indicator => {
+            if (src.toLowerCase().includes(indicator)) {
+                metadataScore += 0.2;
+            }
+        });
+        
+        // Check for common processed image dimensions in URLs
+        const processedDimensions = ['800x600', '1200x800', '1600x1200', '1920x1080', '2560x1440'];
+        processedDimensions.forEach(dim => {
+            if (src.includes(dim)) {
+                metadataScore += 0.3;
+            }
+        });
+        
         return Math.min(metadataScore, 1);
     }
     
@@ -454,41 +757,45 @@ class AIVisualDetector {
     analyzeFileCharacteristics(element) {
         let fileScore = 0;
         
+        // Handle both images and videos
+        const width = element.naturalWidth || element.videoWidth;
+        const height = element.naturalHeight || element.videoHeight;
+        
         // Check image dimensions (AI often generates standard sizes)
-        if (element.naturalWidth && element.naturalHeight) {
+        if (width && height) {
             const commonAISizes = [
                 [512, 512], [1024, 1024], [768, 768], [512, 768],
                 [1024, 768], [1920, 1080], [1080, 1920], [1536, 1536],
                 [2048, 2048], [1024, 1024], [512, 512]
             ];
             
-            commonAISizes.forEach(([width, height]) => {
-                if (element.naturalWidth === width && element.naturalHeight === height) {
+            commonAISizes.forEach(([checkWidth, checkHeight]) => {
+                if (width === checkWidth && height === checkHeight) {
                     fileScore += 0.4;
                 }
             });
             
             // Check for power-of-2 dimensions
-            if (this.isPowerOfTwo(element.naturalWidth) && this.isPowerOfTwo(element.naturalHeight)) {
+            if (this.isPowerOfTwo(width) && this.isPowerOfTwo(height)) {
                 fileScore += 0.3;
             }
             
             // Perfect squares are very common in AI generation
-            if (element.naturalWidth === element.naturalHeight) {
+            if (width === height) {
                 fileScore += 0.3;
             }
             
             // Very high resolution images
-            if (element.naturalWidth >= 2048 || element.naturalHeight >= 2048) {
+            if (width >= 2048 || height >= 2048) {
                 fileScore += 0.3;
             }
             
             // Specific AI generation patterns
-            if (element.naturalWidth === 1024 && element.naturalHeight === 1024) {
+            if (width === 1024 && height === 1024) {
                 fileScore += 0.5; // Most common AI size
             }
             
-            if (element.naturalWidth === 512 && element.naturalHeight === 512) {
+            if (width === 512 && height === 512) {
                 fileScore += 0.4; // Common in older models
             }
         }
@@ -506,7 +813,9 @@ class AIVisualDetector {
             'Edge Detection': 0.15,
             'Metadata Analysis': 0.25,
             'File Characteristics': 0.20,
-            'AI Artifacts': 0.30
+            'AI Artifacts': 0.30,
+            'Video Characteristics': 0.35,
+            'Processed Image Analysis': 0.40
         };
         
         let weightedScore = 0;
@@ -596,4 +905,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Also initialize on window load for pages that load content dynamically
 window.addEventListener('load', () => {
     console.log('AI Visual Content Detector - window loaded');
-}); 
+});
+
+} // Close the if statement that prevents duplicate injection

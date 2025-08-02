@@ -147,17 +147,132 @@ document.addEventListener('DOMContentLoaded', function() {
                 thumbnail.className = 'media-thumbnail';
                 
                 if (media.type === 'video') {
-                    thumbnail.classList.add('video');
-                    thumbnail.textContent = '🎥';
+                    console.log('Processing video media:', media);
+                    
+                    // Create a very simple video thumbnail that will definitely work
+                    thumbnail.innerHTML = '🎥';
+                    thumbnail.style.background = 'linear-gradient(45deg, #667eea, #764ba2)';
+                    thumbnail.style.display = 'flex';
+                    thumbnail.style.alignItems = 'center';
+                    thumbnail.style.justifyContent = 'center';
+                    thumbnail.style.fontSize = '16px';
+                    thumbnail.style.color = 'white';
+                    thumbnail.style.cursor = 'pointer';
+                    thumbnail.style.borderRadius = '4px';
+                    thumbnail.title = 'Click to open video';
+                    
+                    console.log('Simple video thumbnail created');
+                    
+                    // Add click handler
+                    thumbnail.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Video thumbnail clicked!');
+                        console.log('Media object:', media);
+                        console.log('Opening video in new tab:', media.src);
+                        
+                        if (media.src) {
+                            try {
+                                window.open(media.src, '_blank');
+                                console.log('Successfully opened video in new tab:', media.src);
+                            } catch (error) {
+                                console.error('Failed to open video:', error);
+                            }
+                        } else {
+                            console.log('No video source available');
+                        }
+                    });
+                    
+                    // Add visual feedback
+                    thumbnail.addEventListener('mousedown', () => {
+                        thumbnail.style.transform = 'scale(0.95)';
+                    });
+                    
+                    thumbnail.addEventListener('mouseup', () => {
+                        thumbnail.style.transform = 'scale(1)';
+                    });
+                    
                 } else {
                     // Create image thumbnail
                     const img = document.createElement('img');
-                    img.src = media.src;
+                    
+                    // Use captured image data if available to prevent dynamic content issues
+                    if (media.imageDataUrl) {
+                        img.src = media.imageDataUrl;
+                        console.log('Using captured image data for thumbnail');
+                    } else {
+                        img.src = media.src;
+                        console.log('Using original source for thumbnail:', media.src);
+                    }
+                    
                     img.alt = `Preview of ${media.type}`;
+                    img.style.cursor = 'pointer';
                     img.onerror = () => {
                         thumbnail.textContent = '🖼️';
                         thumbnail.style.background = '#f8f9fa';
+                        thumbnail.style.cursor = 'pointer';
                     };
+                    
+                    // Add click handler to open image in new tab
+                    img.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                                            console.log('Image thumbnail clicked!');
+                    console.log('Media object:', media);
+                    console.log('Opening image in new tab:', media.src);
+                    console.log('Image element src:', img.src);
+                    console.log('Original src from analysis:', media.originalSrc);
+                    console.log('Analysis timestamp:', media.analyzedAt);
+                    
+                    // Use the media.src from analysis, not the img.src to ensure we get the correct URL
+                    const targetUrl = media.src || img.src;
+                    console.log('Target URL:', targetUrl);
+                        
+                        if (targetUrl) {
+                            try {
+                                window.open(targetUrl, '_blank');
+                                console.log('Successfully opened image in new tab:', targetUrl);
+                            } catch (error) {
+                                console.error('Failed to open image:', error);
+                            }
+                        } else {
+                            console.log('No image source available');
+                        }
+                    });
+                    
+                    // Add visual feedback on click
+                    img.addEventListener('mousedown', () => {
+                        img.style.transform = 'scale(0.95)';
+                    });
+                    
+                    img.addEventListener('mouseup', () => {
+                        img.style.transform = 'scale(1)';
+                    });
+                    
+                    // Add tooltip with more information
+                    const tooltipText = `Click to open image\nAnalyzed: ${media.analyzedAt ? new Date(media.analyzedAt).toLocaleTimeString() : 'Unknown'}`;
+                    img.title = tooltipText;
+                    
+                    // Add a small indicator if the image might be dynamic
+                    if (media.originalSrc && media.originalSrc !== media.src) {
+                        const dynamicIndicator = document.createElement('div');
+                        dynamicIndicator.style.cssText = `
+                            position: absolute;
+                            top: 2px;
+                            left: 2px;
+                            background: rgba(255, 193, 7, 0.9);
+                            color: #333;
+                            padding: 1px 4px;
+                            border-radius: 2px;
+                            font-size: 8px;
+                            font-weight: 600;
+                            z-index: 2;
+                        `;
+                        dynamicIndicator.textContent = 'DYNAMIC';
+                        dynamicIndicator.title = 'This image source may have changed since analysis';
+                        thumbnail.appendChild(dynamicIndicator);
+                    }
+                    
                     thumbnail.appendChild(img);
                 }
                 
@@ -267,6 +382,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     target: { tabId: tab.id },
                     files: ['content.js']
                 });
+                console.log('Content script injected successfully');
             } catch (injectionError) {
                 console.log('Content script already loaded or injection failed:', injectionError);
             }
